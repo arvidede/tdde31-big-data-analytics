@@ -18,5 +18,5 @@ max_temperatures_sorted = max_temperatures.sortBy(ascending=False, keyfunc = lam
 min_temperatures_sorted = min_temperatures.sortBy(ascending=False, keyfunc = lambd k: k[2])
 
 # Save to file
-max_temperatures_sorted.saveAasTextFile("max_temperature")
-min_temperatures_sorted.saveAasTextFile("min_temperature")
+max_temperatures_sorted.saveAsTextFile("max_temperature")
+min_temperatures_sorted.saveAsTextFile("min_temperature")

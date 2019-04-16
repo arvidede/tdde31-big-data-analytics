@@ -1,10 +1,14 @@
 from pyspark import SparkContext
 
 # Misc input and setup
-sc = SparkContext(appName = "lab1_1_b")
-# temperature_file = sc.textFile("/user/x_arved/data/temperature-readings.csv")
-# temperature_file = sc.textFile("/user/x_arved/data/temperatures-big.csv")
-temperature_file = sc.textFile("/user/common/732A54/temperatures-big.csv")
+sc = SparkContext(appName = "lab1_1_a")
+
+# Local
+temperature_file = sc.textFile("./data/temperature-readings.csv")
+
+# Heffa
+temperature_file = sc.textFile("/user/x_arved/data/temperature-readings.csv")
+
 lines = temperature_file.map(lambda line: line.split(";"))
 year_temperature = lines.map(lambda x: ((x[0], x[1][0:4]), float(x[3])))
 
@@ -16,8 +20,8 @@ max_temperatures = year_temperature.reduceByKey(lambda a,b: a if a>=b else b)
 min_temperatures = year_temperature.reduceByKey(lambda a,b: a if a<b else b)
 
 # Sort by temperature, index = 2
-max_temperatures_sorted = max_temperatures.sortBy(ascending=False, keyfunc = lambda k: k[1])
-min_temperatures_sorted = min_temperatures.sortBy(ascending=False, keyfunc = lambda k: k[1])
+max_temperatures_sorted = max_temperatures.sortBy(ascending=False, keyfunc = lambda k: k[1], numPartitions = 1)
+min_temperatures_sorted = min_temperatures.sortBy(ascending=False, keyfunc = lambda k: k[1], numPartitions = 1)
 
 # Save to file
 max_temperatures_sorted.saveAsTextFile("max_temperature")

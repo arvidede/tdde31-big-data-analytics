@@ -4,7 +4,7 @@ from pyspark import SparkContext
 sc = SparkContext(appName = "lab1_1_a")
 
 # Local
-temperature_file = sc.textFile("./data/temperature-readings.csv")
+# temperature_file = sc.textFile("./data/temperature-readings.csv")
 
 # Heffa
 temperature_file = sc.textFile("/user/x_arved/data/temperature-readings.csv")

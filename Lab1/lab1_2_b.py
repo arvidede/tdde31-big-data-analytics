@@ -16,10 +16,10 @@ year_temperature = lines.map(lambda x: ((x[0], x[1][0:4], x[1][5:7]), float(x[3]
 # Filter all readings before 1950 and after 2014 which has a temperature above 10 degrees
 year_temperature = year_temperature.filter(lambda x: int(x[0][1])>=1950 and int(x[0][1])<=2014 and x[1] > 10)
 
-occurences = year_temperature.keys().distinct().map(
-    lambda x: ((x[1], x[2]), 1)).reduceByKey(
-    lambda a, b: a + b).sortByKey(
-    numPartitions = 1)
+occurences = year_temperature.keys() \
+            .distinct().map(lambda x: ((x[1], x[2]), 1)) \
+            .reduceByKey(lambda a, b: a + b) \
+            .sortByKey(numPartitions = 1) \
 
 # Save to file
 # f = open('/user/x_arved/results/results_1_2_b.txt', 'w')

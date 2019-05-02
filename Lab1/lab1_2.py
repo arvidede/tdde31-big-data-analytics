@@ -22,9 +22,9 @@ year_temperature = year_temperature.filter(lambda x: int(x[0][0])>=1950 and int(
 #     f.write(str(keys[0]) + ',' + str(keys[1]) + ',' + str(count) + '\n')
 # f.close()
 
-occurences = year_temperature.map(
-    lambda x: ((x[0][0], x[0][1]), 1)).reduceByKey(
-    lambda a, b: a + b).sortByKey(
-    numPartitions = 1)
+occurences = year_temperature \
+            .map(lambda x: ((x[0][0], x[0][1]), 1)) \
+            .reduceByKey(lambda a, b: a + b) \
+            .sortByKey(numPartitions = 1)
 
 occurences.saveAsTextFile('lab1_2_a')

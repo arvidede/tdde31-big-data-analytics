@@ -38,8 +38,8 @@ average_precipitations = precipitation_readings \
                     .map(lambda x: (x[0][1] ,(x[1][0]/x[1][1], 1))) \
                     .reduceByKey(lambda a,b: (a[0]+b[0], a[1]+b[1])) \
                     .mapValues(lambda v: v[0]/v[1]) \
-                    .repartition(1)
+                    .sortByKey(numPartitions=0)
 
 
 # Save to file
-filtered_data.saveAsTextFile("lab1_5")
+average_precipitations.saveAsTextFile("lab1_5")

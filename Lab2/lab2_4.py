@@ -6,22 +6,41 @@ from pyspark.sql import functions as F
 sc = SparkContext()
 sqlContext = SQLContext(sc)
 
-# Load a text file and convert each line to a Row.
-rdd = sc.textFile("../data/temperature-readings.csv")
-parts = rdd.map(lambda l: l.split(";"))
-tempReadings = parts.map(lambda p: Row(station=p[0], month=int(p[1].split("-")[1]), year=int(p[1].split("-")[0]), value=float(p[3])))
-
+###### TEMPERATURE ######
+temperatureFile = sc.textFile("../data/temperature-readings.csv")
+temperatureLines = temperatureFile.map(lambda line: line.split(";"))
+tempReadings = temperatureLines.map(lambda p: Row(station=p[0], date=p[1], value=float(p[3])))
 schemaTempReadings = sqlContext.createDataFrame(tempReadings)
 schemaTempReadings.createOrReplaceTempView("tempReadings")
 
-schemaTempReadings = schemaTempReadings.filter(schemaTempReadings.year.between(1960, 2014))
+# Highest daily temperature per station
+schemaTempReadings = schemaTempReadings.groupBy(['date', 'station']) \
+                                        .agg(F.max('value').alias('maxTemp'))
 
-# Query average temperature
-schemaTempReadings = schemaTempReadings.groupBy('year', 'month', 'station') \
-                                       .avg('value') \
-                                       .orderBy(['station', 'year', 'month','avg(value)'], ascending=[1,1,1,0]) \
-                                       .repartition(1)
+schemaTempReadings = schemaTempReadings.filter(schemaTempReadings.maxTemp.between(25, 30)).drop('date')
 
+
+
+
+###### PRECIPITATION ######
+precipitationFile = sc.textFile("../data/precipitation-readings.csv")
+precipitationLines = precipitationFile.map(lambda line: line.split(";"))
+precipitationReadings = precipitationLines.map(lambda p: Row(station=p[0], date=p[1], value=float(p[3])))
+schemaPrecipitationReadings = sqlContext.createDataFrame(precipitationReadings)
+schemaPrecipitationReadings.createOrReplaceTempView("precipitationReadings")
+
+schemaPrecipitationReadings = schemaPrecipitationReadings.groupBy(['date', 'station']) \
+                                        .agg(F.max('value').alias('maxDailyPrecipitation'))
+
+schemaPrecipitationReadings = schemaPrecipitationReadings.filter(schemaPrecipitationReadings.maxDailyPrecipitation.between(100, 200)).drop('date')
+
+
+
+###### JOIN ######
+readings = schemaTempReadings.join(schemaPrecipitationReadings, 'station').orderBy(['station', 'maxTemp', 'maxDailyPrecipitation'], descending=[1,0,0])
+
+
+# Huanyu: The key for two rdds to join is supposed to be just station. Date is not needed here.
 # year, month, station number, average value ORDER BY year, month ASC
 
-schemaTempReadings.write.mode('append').csv("./results/lab2_3")
+readings.repartition(1).write.mode('append').csv("./results/lab2_4")

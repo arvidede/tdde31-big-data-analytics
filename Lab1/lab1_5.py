@@ -21,8 +21,12 @@ stations = station_lines.map(lambda x: (x[0])).collect()
 
 
 # Date = YYYY-MM [0:7]
-# Station number, date, precipitation
-precipitation_readings = precipitation_lines.map(lambda x: ((x[0], x[1][0:7]), (float(x[3]), 1)))
+# Station number, date, precipitation, iterator
+precipitation_readings = precipitation_lines.map(lambda x: ((x[0], x[1][0:7]), float(x[3])))
+
+# FOR ALTERNATIVE SOLUTION, SEE BELOW
+# Station number, date, precipitation, iterator
+# precipitation_readings = precipitation_lines.map(lambda x: ((x[0], x[1][0:7]), (float(x[3]), 1)))
 
 
 # Filter all readings from stations in Östergötland before 1950 and after 2014
@@ -33,13 +37,32 @@ precipitation_readings = precipitation_readings.filter(lambda x: \
 
 
 # Reduce by (station, date), calculate average per station, reduce by date, calculate average per month
+# 1. Sum of precipitations per month and station
+# 2. Remove station from key, and add iterator (used to sum for all stations in month)
+# 3. Sum all station precipitations
+# 4. Calculate average precipitations
 average_precipitations = precipitation_readings \
-                    .reduceByKey(lambda a,b: (a[0]+b[0], a[1]+b[1])) \
-                    .map(lambda x: (x[0][1] ,(x[1][0]/x[1][1], 1))) \
+                    .reduceByKey(lambda a,b: (a+b)) \
+                    .map(lambda x: (x[0][1] ,(x[1], 1))) \
                     .reduceByKey(lambda a,b: (a[0]+b[0], a[1]+b[1])) \
                     .mapValues(lambda v: v[0]/v[1]) \
-                    .sortByKey(numPartitions=0)
+                    .repartition(1)
+
+
+
+# ALTERNATIVE SOULTION, USED IN FIRST HAND-IN
+# Reduce by (station, date), calculate average per station, reduce by date, calculate average per month
+# 1. Sum of precipitations per month and station
+# 2. Remove station from key, calculate average per station and add iterator (used to sum for all stations in month)
+# 3. Sum all station averages
+# 4. Calculate average of station averages
+# average_precipitations = precipitation_readings \
+#                     .reduceByKey(lambda a,b: (a[0]+b[0], a[1]+b[1])) \
+#                     .map(lambda x: (x[0][1] ,(x[1][0]/x[1][1], 1))) \
+#                     .reduceByKey(lambda a,b: (a[0]+b[0], a[1]+b[1])) \
+#                     .mapValues(lambda v: v[0]/v[1]) \
+#                     .repartition(1)
 
 
 # Save to file
-average_precipitations.saveAsTextFile("lab1_5")
+average_precipitations.saveAsTextFile("lab1_5_pt2")

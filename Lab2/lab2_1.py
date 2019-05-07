@@ -33,5 +33,5 @@ schemaTempReadingsMin = schemaTempReadings.join(schemaTempReadingsMin, ['year', 
 # year, station with the max, maxValue ORDER BY maxValue DESC
 # year, station with the min, minValue ORDER BY minValue DESC
 
-schemaTempReadingsMax.write.mode('append').csv("./results/lab2_1_max")
-schemaTempReadingsMin.write.mode('append').csv("./results/lab2_1_min")
+schemaTempReadingsMax.repartition(1).write.mode('append').csv("./results/lab2_1_max")
+schemaTempReadingsMin.repartition(1).write.mode('append').csv("./results/lab2_1_min")

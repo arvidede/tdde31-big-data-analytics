@@ -16,11 +16,11 @@ schemaTempReadings.createOrReplaceTempView("tempReadings")
 
 schemaTempReadings = schemaTempReadings.filter(schemaTempReadings.year.between(1960, 2014))
 
-# Distinct
+# Query average temperature
 schemaTempReadings = schemaTempReadings.groupBy('year', 'month', 'station') \
-                                        .avg('value') \
-                                        .orderBy(['station', 'year', 'month','avg(value)'], ascending=[1,1,1,0]) \
-                                        .repartition(1)
+                                       .avg('value') \
+                                       .orderBy(['station', 'year', 'month','avg(value)'], descending=[0,0,0,1]) \
+                                       .repartition(1)
 
 # year, month, station number, average value ORDER BY year, month ASC
 

@@ -18,19 +18,17 @@ schemaTempReadings.createOrReplaceTempView("tempReadings")
 allFilteredReadings = (sqlContext.sql("""
     SELECT year, month, COUNT(value)
     FROM tempReadings
-    WHERE year>=1950 AND year<=2014 AND value>=10.0
+    WHERE year>=1950 AND year<=2014 AND value>10.0
     GROUP BY year, month
-    ORDER BY year, month"""))
+    ORDER BY COUNT(DISTINCT year, month, station) DESC"""))
 
 # Distinct
 distinctFilteredReadings = sqlContext.sql("""
-    SELECT year, month, COUNT(value) FROM
-        (SELECT DISTINCT station, year, month, value
-        FROM tempReadings
-        WHERE year>=1950 AND year<=2014 AND value>=10.0
-        GROUP BY year, month, station, value)
+    SELECT year, month, COUNT(DISTINCT year, month, station) FROM
+    FROM tempReadings
+    WHERE year>=1950 AND year<=2014 AND value>10.0
     GROUP BY year, month
-    ORDER BY year, month""")
+    ORDER BY COUNT(DISTINCT year, month, station) DESC""")
 
 # year, station with the max, maxValue ORDER BY maxValue DESC
 # year, station with the min, minValue ORDER BY minValue DESC

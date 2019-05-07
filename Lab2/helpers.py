@@ -20,3 +20,21 @@ def collectAndSortPartitions():
 
     f.close()
 
+
+def sortByValue():
+    fr = open('results/1_min.txt')
+    fw = open('results/lab2_1_min.txt', 'w')
+
+    data = []
+    for line in fr:
+        data.append(line)
+
+    data.sort(key = lambda x: float(x.split(',')[1]), reverse = True)
+
+    for row in data:
+        fw.write(row)
+
+    fr.close()
+    fw.close()
+
+sortByValue()

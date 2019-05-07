@@ -9,30 +9,27 @@ sqlContext = SQLContext(sc)
 # Load a text file and convert each line to a Row.
 rdd = sc.textFile("../data/temperature-readings.csv")
 parts = rdd.map(lambda l: l.split(";"))
-tempReadings = parts.map(lambda p: Row(station=p[0], year=p[1].split("-")[0], value=float(p[3])))
+tempReadings = parts.map(lambda p: Row(month=p[1].split("-")[1], year=p[1].split("-")[0], value=float(p[3])))
 
 schemaTempReadings = sqlContext.createDataFrame(tempReadings)
 schemaTempReadings.registerTempTable("tempReadings")
 
-# Lowest and highest temperature measured each year.
-schemaTempReadingsDistinct = schemaTempReadings.groupBy('year', 'station') \
-                                          .agg(F.min('value') \
-                                          .alias('dailymax')) \
-                                          .orderBy(['year', 'station', 'dailymax'], ascending=[0,0,1])
-
-schemaTempReadingsNotDistinct = schemaTempReadings.groupBy('year', 'station') \
-                                          .agg(F.max('value') \
-                                          .alias('dailymin')) \
-                                          .orderBy(['year', 'station', 'dailymin'], ascending=[0,0,1])
-
-# Not distinct
-largerThan10Degrees = sqlContext.sql("SELECT year, month, count(value) as value FROM tempReadingsTable WHERE year=1950 and value>=10.0 group by year")
+schemaTempReadings = schemaTempReadings.filter(schemaTempReadings["year"] >= 1950 & schemaTempReadings["year"] <= 2014 & schemaTempReadings["value"] > 10)
 
 # Distinct
-largerThan10Degrees = sqlContext.sql("SELECT year, month, count(value) as value FROM tempReadingsTable WHERE year=1950 and value>=10.0 group by year")
+schemaTempReadingsDistinct = schemaTempReadings.groupBy('year', 'month') \
+                                          .agg(F.count('value').alias('distinct')) \
+                                          .select(['year', 'month', 'distinct']) \
+                                          .orderBy(['year', 'month', 'distinct'], descending=[0,0,1])
 
-# year, station with the max, maxValue ORDER BY maxValue DESC
-# year, station with the min, minValue ORDER BY minValue DESC
+# Not distinct
+schemaTempReadingsNotDistinct = schemaTempReadings.groupBy('year', 'month') \
+                                          .agg(F.countDistinct('value').alias('notDistinct')) \
+                                          .select(['year', 'month', 'notDistinct']) \
+                                          .orderBy(['year', 'month', 'notDistinct'], descending=[0,0,1])
 
-schemaTempReadingsMax.write.mode('append').csv("./results/lab2_1_max")
-schemaTempReadingsMin.write.mode('append').csv("./results/lab2_1_min")
+# year, month, value ORDER BY value DESC
+# year, month, value ORDER BY value DESC
+
+schemaTempReadingsDistinct.write.mode('append').csv("./results/lab2_2_api_distinct")
+schemaTempReadingsNotDistinct.write.mode('append').csv("./results/lab2_2_api_not_distinct")

@@ -9,23 +9,19 @@ sqlContext = SQLContext(sc)
 # Load a text file and convert each line to a Row.
 rdd = sc.textFile("../data/temperature-readings.csv")
 parts = rdd.map(lambda l: l.split(";"))
-tempReadings = parts.map(lambda p: Row(station=p[0], year=p[1].split("-")[0], value=float(p[3])))
+tempReadings = parts.map(lambda p: Row(station=p[0], year=int(p[1].split("-")[0]), month=int(p[1].split("-")[1]), value=float(p[3])))
 
 schemaTempReadings = sqlContext.createDataFrame(tempReadings)
-schemaTempReadings.registerTempTable("tempReadings")
-
-# Lowest and highest temperature measured each year.
-max = sqlContext.sql("SELECT year, station, max(value) as value FROM tempReadings WHERE year>=1950 AND year<=2014 ORDER BY value DESC")
-min = sqlContext.sql("SELECT year, station, min(value) as value FROM tempReadings WHERE year>=1950 AND year<=2014 ORDER BY value DESC")
+schemaTempReadings.createOrReplaceTempView("tempReadings")
 
 # Not distinct
-largerThan10Degrees = sqlContext.sql("SELECT year, month, count(value) as value FROM tempReadingsTable WHERE year=1950 and value>=10.0 group by year")
+allFilteredReadings = (sqlContext.sql("SELECT year, month, COUNT(value) FROM tempReadings WHERE year>=1950 AND year<=2014 AND value>=10.0 GROUP BY year, month ORDER BY year, month"))
 
 # Distinct
-largerThan10Degrees = sqlContext.sql("SELECT year, month, count(value) as value FROM tempReadingsTable WHERE year=1950 and value>=10.0 group by year")
+distinctFilteredReadings = sqlContext.sql("SELECT year, month, COUNT(value) FROM (SELECT DISTINCT station, year, month, value FROM tempReadings WHERE year>=1950 AND year<=2014 AND value>=10.0 GROUP BY year, month, station, value) GROUP BY year, month ORDER BY year, month")
 
 # year, station with the max, maxValue ORDER BY maxValue DESC
 # year, station with the min, minValue ORDER BY minValue DESC
 
-schemaTempReadingsMax.write.mode('append').csv("./results/lab2_1_max")
-schemaTempReadingsMin.write.mode('append').csv("./results/lab2_1_min")
+allFilteredReadings.repartition(1).write.mode('append').csv("./results/lab2_2_sql")
+distinctFilteredReadings.repartition(1).write.mode('append').csv("./results/lab2_2_sql_distinct")

@@ -22,14 +22,14 @@ def collectAndSortPartitions():
 
 
 def sortByValue():
-    fr = open('results/1_min.txt')
-    fw = open('results/lab2_1_min.txt', 'w')
+    fr = open('results/lab2_6.txt')
+    fw = open('results/6.txt', 'w')
 
     data = []
     for line in fr:
         data.append(line)
 
-    data.sort(key = lambda x: float(x.split(',')[1]), reverse = True)
+    data.sort(key = lambda x: (float(x.split(',')[-1]), float(x.split(',')[0])), reverse = True)
 
     for row in data:
         fw.write(row)

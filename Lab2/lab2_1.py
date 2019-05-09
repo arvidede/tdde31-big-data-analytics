@@ -14,7 +14,7 @@ tempReadings = parts.map(lambda p: Row(station=p[0], year=int(p[1].split("-")[0]
 schemaTempReadings = sqlContext.createDataFrame(tempReadings)
 schemaTempReadings.registerTempTable("tempReadings")
 
-schemaTempReadings = schemaTempReadings.filter("year >= 1950 AND year <= 2014")
+schemaTempReadings = schemaTempReadings.filter(schemaTempReadings.year.between(1950, 2014))
 
 # Lowest and highest temperature measured each year.
 schemaTempReadingsMax = schemaTempReadings.groupBy('year') \

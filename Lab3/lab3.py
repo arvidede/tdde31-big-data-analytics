@@ -4,10 +4,27 @@ from math import radians, cos, sin, asin, sqrt, exp
 from datetime import datetime
 from pyspark import SparkContext
 
-stations = sc.textFile("../data/stations.csv")
-temps = sc.textFile("../data/temperature-readings.csv")
+#sc = SparkContext(appName="lab_kernel")
+sc = SparkContext()
+sqlContext = SQLContext(sc)
 
-sc = SparkContext(appName="lab_kernel")
+# Stations
+ostergotlandFile = sc.textFile("../data/stations.csv")
+ostergotlandLines= ostergotlandFile.map(lambda line: line.split(";"))
+ostergotlandStations = ostergotlandLines.map(lambda p: Row(station=p[0], lat=float(p[3]), long=float(p[4]))
+schemaStations = sqlContext.createDataFrame(ostergotlandStations)
+schemaStations.createOrReplaceTempView("stations")
+
+# Temperatures
+temperatureFile = sc.textFile("../data/temperature-readings.csv")
+temperatureLines = temperatureFile.map(lambda line: line.split(";"))
+tempReadings = temperatureLines.map(lambda p: Row(station=p[0], day=int(p[1].split("-")[2]), month=int(p[1].split("-")[1]), \
+                                                  year=int(p[1].split("-")[0]), value=float(p[3])))
+schemaTempReadings = sqlContext.createDataFrame(tempReadings)
+schemaTempReadings.createOrReplaceTempView("tempReadings")
+
+# En join mellan datafilerna?
+
 def haversine(lon1, lat1, lon2, lat2):
     # Calculate the great circle distance between two points on the earth (specified in decimal degrees)
     # convert decimal degrees to radians
@@ -32,10 +49,11 @@ h = ("04:00:00", "06:00:00", "08:00:00", "10:00:00", "12:00:00", "14:00:00",\
 
 # Your code here
 # Exclude all dates after 2013-07-04
+schemaTempReadings = schemaTempReadings.filter("year <= 2014 AND month <= 07 AND day <= 04")
 
 # Gaussian kernel
 def kernel(u):
-    return(exp(-(abs(u)^2)))
+    return(exp(-(abs(u)**2)))
 
 # Distance
 # kernel(dateDiff/h_date)

@@ -31,3 +31,25 @@ h = ("04:00:00", "06:00:00", "08:00:00", "10:00:00", "12:00:00", "14:00:00",\
      "16:00:00", "18:00:00", "20:00:00", "22:00:00", "00:00:00")
 
 # Your code here
+# Exclude all dates after 2013-07-04
+
+# Gaussian kernel
+def kernel(u):
+    return(exp(-(abs(u)^2)))
+
+# Distance
+# kernel(dateDiff/h_date)
+
+# Date
+# dateDiff <- unclass((as.POSIXct(date) - as.POSIXct(st[i,]$date)))
+# dateDiff <- dateDiff %% 365
+# if (dateDiff > 365/2) {
+#    dateDiff <- 365 - dateDiff
+# }
+
+# Time
+# if (timeDiff > 12) {
+#   timeDiff <- timeDiff - 12
+# }
+
+# temp[i] <- sum((distanceKernel + dateKernel + timeKernel)*allTemp)/sum(distanceKernel + dateKernel + timeKernel)

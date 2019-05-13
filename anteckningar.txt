@@ -1,0 +1,12 @@
+##### Gradient Descent #####
+
+Map => Implement the calculation of the gradient for a single point (term?)
+Reduce => Sum the gradients/partial derivatives
+
+Varje rad motsvarar gradienten i en punkt map på en term
+
+Vid groupByKey fås en lista med alla gradienter i den punkten => Summera
+
+
+
+##### SVM #####

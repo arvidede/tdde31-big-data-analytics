@@ -30,8 +30,7 @@ schemaPrecipitationReadings = sqlContext.createDataFrame(precipitationReadings)
 schemaPrecipitationReadings.createOrReplaceTempView("precipitationReadings")
 
 schemaPrecipitationReadings = schemaPrecipitationReadings.groupBy(['date', 'station']) \
-                                        .agg(F.sum('value').alias('stationDaySum')) \
-                                        .groupBy(['date', 'station']) \
+                                        .agg(F.sum('value').alias('stationDaySum'))
                                         .agg(F.max('stationDaySum').alias('maxDailyPrecipitation'))
 
 schemaPrecipitationReadings = schemaPrecipitationReadings.filter(schemaPrecipitationReadings.maxDailyPrecipitation.between(100, 200)).drop('date')

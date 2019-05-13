@@ -9,7 +9,7 @@ sqlContext = SQLContext(sc)
 # Load a text file and convert each line to a Row.
 rdd = sc.textFile("../data/temperature-readings.csv")
 parts = rdd.map(lambda l: l.split(";"))
-tempReadings = parts.map(lambda p: Row(month=p[1].split("-")[1], year=int(p[1].split("-")[0]), value=float(p[3])))
+tempReadings = parts.map(lambda p: Row(station=p[0], month=p[1].split("-")[1], year=int(p[1].split("-")[0]), value=float(p[3])))
 
 schemaTempReadings = sqlContext.createDataFrame(tempReadings)
 schemaTempReadings.registerTempTable("tempReadings")
@@ -17,8 +17,9 @@ schemaTempReadings.registerTempTable("tempReadings")
 schemaTempReadings = schemaTempReadings.filter("year >= 1950 AND year <= 2014 AND value > 10")
 
 # Distinct
-schemaTempReadingsDistinct = schemaTempReadings.groupBy('year', 'month') \
-                                          .agg(F.countDistinct('value').alias('distinct')) \
+schemaTempReadingsDistinct = schemaTempReadings.dropDuplicates(['year', 'month', 'station']) \
+                                          .groupBy('year', 'month') \
+                                          .agg(F.count('value').alias('distinct')) \
                                           .orderBy(['year', 'month', 'distinct'], descending=[0,0,1]) \
                                           .repartition(1)
 

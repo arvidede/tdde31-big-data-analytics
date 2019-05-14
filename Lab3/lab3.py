@@ -8,13 +8,13 @@ sc = SparkContext()
 dateFormat = '%Y-%m-%d'
 
 # Stations - station, lat, long
-stationsFile = sc.textFile("../data/stations.csv")
+stationsFile = sc.textFile("./data/stations.csv")
 stationsLines= stationsFile.map(lambda line: line.split(";"))
 stations = stationsLines.map(lambda x: ((x[0]), (float(x[3]), float(x[4]))))
 stations = dict(stations.collect())
 
 # Temperatures - station, date, time, temp, lat, long
-temperatureFile = sc.textFile("../data/temperature-readings.csv")
+temperatureFile = sc.textFile("./data/temperature-readings.csv")
 temperatureLines = temperatureFile.map(lambda line: line.split(";"))
 readings = temperatureLines.map(lambda x: ((x[0], datetime.strptime(x[1], dateFormat), int(x[2][0:2]), float(x[3]), stations[x[0]][0], stations[x[0]][1])))
 
@@ -39,12 +39,21 @@ h_date = 10
 h_time = 2
 a = 58.4274
 b = 14.826
-date = datetime.strptime("2013-07-04", dateFormat)
-h = (4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 0)
+date_ = datetime.strptime("2013-07-04", dateFormat)
+h = [4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 0]
 
 # Your code here
+
+# Kernel
+def kernel(date, time, lat, lon, value):
+    kernel_approx = gaussianKernel(haversine(lon, lat, b, a) / h_distance) + \
+                    gaussianKernel(dateDiff(date_ - date) / h_date) + \
+                    gaussianKernel((abs(hour - time) % 12) / h_time)
+
+    return kernel_approx * value, kernel_approx
+
 # Gaussian kernel
-def kernel(u):
+def gaussianKernel(u):
     return(exp(-(abs(u)**2)))
 
 # Date
@@ -52,15 +61,17 @@ def dateDiff(x):
     return(abs(x.days % 365))
 
 
-gaussianKernel = []
+forecast = {}
 for hour in h:
     # station, date, time, temp, lat, long
-    kernels = readings.map(lambda x: (kernel(haversine(x[5], x[4], b, a) / h_distance), \
-                                      kernel(dateDiff(date - x[1]) / h_date), \
-                                      kernel((abs(hour - x[2]) % 12) / h_time), \
-                                      x[3]))
+    kernels = readings.map(lambda x: (kernel(x[1], x[2], x[5], x[4], x[3])))
+    kernelSum = kernels.reduce(lambda a,b: (a[0]+b[0], a[1]+b[1]))
 
-    kernelSum = kernels.map(lambda x: (((x[0] + x[1] + x[2])*x[3]) / (x[0] + x[1] + x[2])))
-    gaussianKernel.append(kernelSum.collect())
+    forecast[hour] = kernelSum[0] / kernelSum[1]
 
-print(gaussianKernel)
+
+fw = open('lab3.txt', 'w')
+
+for time, temp in forecast.items():
+    fw.write(str(time) + ':' + str(temp) + '\n')
+fw.close()

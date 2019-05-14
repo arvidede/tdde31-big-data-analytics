@@ -1,5 +1,7 @@
 from os import listdir, getcwd
 from os.path import isfile, join
+from datetime import datetime, timedelta
+from pyspark import SparkContext
 
 def collectAndSortPartitions():
     myPath = getcwd() + '/results/lab2_1_max/'
@@ -37,4 +39,21 @@ def sortByValue():
     fr.close()
     fw.close()
 
-sortByValue()
+
+def testParseDate():
+
+    # Misc input and setup
+    sc = SparkContext(appName = "lab1_6")
+
+    # Local
+    station_file = sc.textFile("./data/stations.csv")
+
+    station_lines = station_file.map(lambda line: line.split(";"))
+
+    # Station number as list
+    stations = station_lines.map(lambda x: (x[0], (float(x[3]), float(x[4]))))
+    stations = dict(stations.collect())
+    print('lon', stations['99330'][0], 'lat', stations['99330'][1])
+
+
+testParseDate()

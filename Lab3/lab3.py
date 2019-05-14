@@ -1,13 +1,11 @@
 # BDA3 - Machine learning with spark
-from future import division
 from math import radians, cos, sin, asin, sqrt, exp
 from datetime import datetime
 from pyspark import SparkContext
 
 #sc = SparkContext(appName="lab_kernel")
 sc = SparkContext()
-sqlContext = SQLContext(sc)
-dateFormat = '%y-%m-%d'
+dateFormat = '%Y-%m-%d'
 
 # Stations - station, lat, long
 stationsFile = sc.textFile("../data/stations.csv")
@@ -18,7 +16,7 @@ stations = dict(stations.collect())
 # Temperatures - station, date, time, temp, lat, long
 temperatureFile = sc.textFile("../data/temperature-readings.csv")
 temperatureLines = temperatureFile.map(lambda line: line.split(";"))
-tempReadings = temperatureLines.map(lambda x: ((x[0], datetime.strptime(x[1], dateFormat), int(x[2][0:2]), float(x[3]), stations[x[0]][0], stations[x[0]][1]))
+readings = temperatureLines.map(lambda x: ((x[0], datetime.strptime(x[1], dateFormat), int(x[2][0:2]), float(x[3]), stations[x[0]][0], stations[x[0]][1])))
 
 # Exclude all dates after 2013-07-04
 readings = readings.filter(lambda x: (int(x[1].year)<=2013 and int(x[1].month)<=7 and int(x[1].day)<=4))
@@ -63,6 +61,6 @@ for hour in h:
                                       x[3]))
 
     kernelSum = kernels.map(lambda x: (((x[0] + x[1] + x[2])*x[3]) / (x[0] + x[1] + x[2])))
-    gaussianKernel.append(kernelSum)
+    gaussianKernel.append(kernelSum.collect())
 
-print gaussianKernel
+print(gaussianKernel)

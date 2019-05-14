@@ -8,13 +8,13 @@ sc = SparkContext()
 dateFormat = '%Y-%m-%d'
 
 # Stations - station, lat, long
-stationsFile = sc.textFile("./data/stations.csv")
+stationsFile = sc.textFile("../data/stations.csv")
 stationsLines= stationsFile.map(lambda line: line.split(";"))
 stations = stationsLines.map(lambda x: ((x[0]), (float(x[3]), float(x[4]))))
 stations = dict(stations.collect())
 
 # Temperatures - station, date, time, temp, lat, long
-temperatureFile = sc.textFile("./data/temperature-readings.csv")
+temperatureFile = sc.textFile("../data/temperature-readings.csv")
 temperatureLines = temperatureFile.map(lambda line: line.split(";"))
 readings = temperatureLines.map(lambda x: ((x[0], datetime.strptime(x[1], dateFormat), int(x[2][0:2]), float(x[3]), stations[x[0]][0], stations[x[0]][1])))
 

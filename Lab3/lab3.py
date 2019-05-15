@@ -36,7 +36,7 @@ def haversine(lon1, lat1, lon2, lat2):
     return km
 
 # Reasonable values according to plots, but generates low temperatures
-h_distance = 2000
+h_distance = 200
 h_date = 50
 h_time = 2.5
 

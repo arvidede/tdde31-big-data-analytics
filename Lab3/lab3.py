@@ -13,9 +13,11 @@ stationsLines= stationsFile.map(lambda line: line.split(";"))
 stations = stationsLines.map(lambda x: ((x[0]), (float(x[3]), float(x[4]))))
 stations = dict(stations.collect())
 
-# Temperatures - station, date, time, temp, lat, long
+
 temperatureFile = sc.textFile("../data/temperature-readings.csv")
 temperatureLines = temperatureFile.map(lambda line: line.split(";"))
+
+# 0 = Station, 1 = Date, 2 = Time, 3 = Temp, 4 = Lat, 5 = Long
 readings = temperatureLines.map(lambda x: ((x[0], datetime.strptime(x[1], dateFormat), int(x[2][0:2]), float(x[3]), stations[x[0]][0], stations[x[0]][1])))
 
 # Exclude all dates after 2013-07-04
@@ -33,10 +35,14 @@ def haversine(lon1, lat1, lon2, lat2):
     km = 6367 * c
     return km
 
-# Up to you
-h_distance = 100000
-h_date = 10
-h_time = 2
+# Reasonable values according to plots, but generates low temperatures
+h_distance = 2000
+h_date = 50
+h_time = 2.5
+
+# h_distance = 2000
+# h_date = 500
+# h_time = 25
 a = 58.4274
 b = 14.826
 date_ = datetime.strptime("2013-07-04", dateFormat)
@@ -45,12 +51,12 @@ h = [4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 0]
 # Your code here
 
 # Kernel
-def kernel(date, time, lat, lon, value):
-    kernel_approx = gaussianKernel(haversine(lon, lat, b, a) / h_distance) + \
-                    gaussianKernel(dateDiff(date_ - date) / h_date) + \
+def kernel(date, time, lat, lon, temp, hour):
+    kernel_approx = gaussianKernel(haversine(lon, lat, b, a) / h_distance) * \
+                    gaussianKernel(dateDiff(date_ - date) / h_date) * \
                     gaussianKernel((abs(hour - time) % 12) / h_time)
 
-    return kernel_approx * value, kernel_approx
+    return kernel_approx * temp, kernel_approx
 
 # Gaussian kernel
 def gaussianKernel(u):
@@ -63,14 +69,14 @@ def dateDiff(x):
 
 forecast = {}
 for hour in h:
-    # station, date, time, temp, lat, long
-    kernels = readings.map(lambda x: (kernel(x[1], x[2], x[5], x[4], x[3])))
+                                            # date, time, lat, long, temp, hour
+    kernels = readings.map(lambda x: (kernel(x[1], x[2], x[4], x[5], x[3], hour)))
     kernelSum = kernels.reduce(lambda a,b: (a[0]+b[0], a[1]+b[1]))
 
     forecast[hour] = kernelSum[0] / kernelSum[1]
 
 
-fw = open('lab3.txt', 'w')
+fw = open('lab3_mult.txt', 'w')
 
 for time, temp in forecast.items():
     fw.write(str(time) + ':' + str(temp) + '\n')
